@@ -18,31 +18,49 @@ const fitBitCache = {
 async function makeOccurance (root) {
   const fitBitData = await readFitbitData()
 
+  const icon = fitBitData.hourSteps > 250 ? `${root}/public/green-tick.png?v2` :
+    fitBitData.hourSteps < 0 ? `${root}/public/red-cross.png?v2` :
+    `${root}/number/${250 - fitBitData.hourSteps}.png?color=${fitBitData.urgent?'red':'black'}`
+
   return {
     name: 'hourlySteps',
-    icon: fitBitData.hourSteps > 250 ? `${root}/public/green-tick.png?v2` : `${root}/number/${250 - fitBitData.hourSteps}.png?color=${fitBitData.urgent?'red':'black'}`,
+    icon,
     toolTip: fitBitData.toolTip
   }
 }
 
 async function readFitbitData () {
   let fitBitData
-  if (fitBitCache.data && fitBitCache.expires > (new Date()).getTime()) {
+  if (false && fitBitCache.data && fitBitCache.expires > (new Date()).getTime()) {
     console.log('using cache')
     fitBitData = fitBitCache.data
   } else {
     const r = await fetch('https://api-fitbit-com.auth.codeite.net/1/user/-/activities/steps/date/today/1d/15min.json', {
       headers: {
-        authorization: `Bearer ${authorization}`
+        authorization
       }
     })
 
-    fitBitCache.data = fitBitData = await r.json()
-    fitBitCache.expires = (new Date()).getTime() + (1000 * 30);
+    fitBitData = await r.json()
+
+    if (!fitBitData.error) {
+      fitBitCache.data = fitBitData;
+      fitBitCache.expires = (new Date()).getTime() + (1000 * 30);
+    } else {
+      return {
+        toolTip: fitBitData.error,
+        hourSteps: -1,
+        urgent: true
+      }
+    }
   }
 
   if (!fitBitData['activities-steps-intraday'] || !fitBitData['activities-steps-intraday'].dataset) {
-    return {}
+    return {
+      toolTip: 'activities-steps-intraday missing',
+      hourSteps: -1,
+      urgent: true
+    }
   }
 
   const dataset = fitBitData['activities-steps-intraday'].dataset
