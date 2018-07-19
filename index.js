@@ -8,7 +8,9 @@ const workTimer = require('./workTimer')
 const app = express()
 
 app.use((req, res, next) => {
-  console.log(req.method, req.path, req.query)
+  const output = [req.method, req.path]
+  if (Object.keys(req.query).length) output.push(req.query)
+  console.log(...output)
   next()
 })
 
