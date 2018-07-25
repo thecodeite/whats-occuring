@@ -23,7 +23,8 @@ app.get('/', async (req, res) => {
   try {
     const occurences = await Promise.all([
       workTimer.makeOccurance(root),
-      fitbit.makeOccurance(root)])
+      fitbit.makeOccurance(root)
+    ])
     res.json({
       occurences
     })

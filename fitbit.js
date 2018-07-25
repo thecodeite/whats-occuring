@@ -1,3 +1,5 @@
+const fs = require('fs-extra')
+
 const {createCanvas} = require('canvas')
 const fetch = require('node-fetch')
 
@@ -18,8 +20,8 @@ const fitBitCache = {
 async function makeOccurance (root) {
   const fitBitData = await readFitbitData()
 
-  const icon = fitBitData.hourSteps > 250 ? `${root}/public/green-tick.png?v2` :
-    fitBitData.hourSteps < 0 ? `${root}/public/red-cross.png?v2` :
+  const icon = fitBitData.hourSteps > 250 ? `${root}/fitbit/tick.png` :
+    fitBitData.hourSteps < 0 ? `${root}/fitbit/tick.png` :
     `${root}/number/${250 - fitBitData.hourSteps}.png?color=${fitBitData.urgent?'red':'black'}`
 
   return {
@@ -31,7 +33,9 @@ async function makeOccurance (root) {
 
 async function readFitbitData () {
   let fitBitData
-  if (false && fitBitCache.data && fitBitCache.expires > (new Date()).getTime()) {
+  //fitBitCache.expires = (new Date()).getTime()-100
+  //fitBitCache.data = {error: 'dev'}
+  if (fitBitCache.data && fitBitCache.expires > (new Date()).getTime()) {
     console.log('using cache')
     fitBitData = fitBitCache.data
   } else {
@@ -42,13 +46,24 @@ async function readFitbitData () {
     })
 
     fitBitData = await r.json()
-
-    if (!fitBitData.error) {
+    console.log(' fitBitData:',  fitBitData)
+    if (!fitBitData.errors) {
       fitBitCache.data = fitBitData;
       fitBitCache.expires = (new Date()).getTime() + (1000 * 30);
     } else {
+      let toolTip = ''
+      if (Array.isArray(fitBitData.errors) && fitBitData.errors.find(x => x.message === 'Too Many Requests')) {
+        toolTip = 'Rate limited';
+        fitBitCache.data = {error: toolTip}
+        fitBitCache.expires = (new Date()).getTime() + (1000 * 60);
+      } else {
+        toolTip = Array.isArray(fitBitData.errors) ? fitBitData.errors.map(x => x.message).join(', ') : `${fitBitData.errors}`
+        fitBitCache.data = {error: toolTip}
+        fitBitCache.expires = 0
+      }
+
       return {
-        toolTip: fitBitData.error,
+        toolTip,
         hourSteps: -1,
         urgent: true
       }
@@ -56,6 +71,7 @@ async function readFitbitData () {
   }
 
   if (!fitBitData['activities-steps-intraday'] || !fitBitData['activities-steps-intraday'].dataset) {
+    console.error('fitBitData:', fitBitData)
     return {
       toolTip: 'activities-steps-intraday missing',
       hourSteps: -1,
@@ -100,5 +116,17 @@ function registerRoutes(app) {
 
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
+  })
+
+  app.get('/fitbit/tick.png', async (req, res) => {
+    const buffer = await fs.readFile('./public/tick-100px.png')
+    res.setHeader('content-type', 'image/png')
+    res.send(addRes(buffer))
+  })
+
+  app.get('/fitbit/cross.png', async (req, res) => {
+    const buffer = await fs.readFile('./public/cross-100px.png')
+    res.setHeader('content-type', 'image/png')
+    res.send(addRes(buffer))
   })
 }

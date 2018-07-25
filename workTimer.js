@@ -1,6 +1,7 @@
 const {createCanvas} = require('canvas')
 const fetch = require('node-fetch')
-
+const moment = require('moment')
+const bodyParser = require('body-parser')
 const {addRes} = require('./helpers')
 
 module.exports = {
@@ -8,27 +9,62 @@ module.exports = {
   makeOccurance
 }
 
+function payload (hours, minutes=0) {
+  const m = moment().startOf('day')
+  const start = m.add(hours, 'hours').add(minutes, 'minutes').format()
+  const end = m.add(8, 'hours').format()
+  return {
+    description: `Work timer: ${start}`,
+    start,
+    end,
+  }
+}
+
 async function makeOccurance (root) {
   const workTimerData = await readWorkTimer()
 
+  const name = 'workTimer'
+  const menus = [
+    {
+      title: 'Start at',
+      dynamicSubMenu: `${root}/work-timer/start-menu`
+    }
+  ]
+
+  if (workTimerData.percent > 0) {
+    menus.push({title: ' '})
+    menus.push ({
+      title: 'Clear event', action: `${root}/work-timer/current-event`, method: 'DELETE'
+    })
+  }
+
+  if (workTimerData.error) return {
+    name,
+    icon: `${root}/work-timer/dynamic-icon.png?pct=0`,
+    toolTip: workTimerData.error,
+    menus
+  }
+
   return {
-    name: 'workTimer',
+    name,
     icon: `${root}/work-timer/dynamic-icon.png?pct=${100 - Math.floor(workTimerData.percent * 100)}`,
-    toolTip: workTimerData.leftDesc
+    toolTip: workTimerData.leftDesc,
+    menus
   }
 }
 
 async function readWorkTimer () {
   const r = await fetch('https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent')
   const workTimerData = await r.json()
-
+  console.log('workTimerData:', workTimerData)
   return workTimerData
 }
 
 function registerRoutes(app) {
   app.get('/work-timer/dynamic-icon.png',  (req, res) => {
     const {pct} = req.query
-    const pctAsNum = (pct && parseInt(pct)) || 50
+    console.log('pct:', pct)
+    const pctAsNum = (pct === undefined && pct === '') ? 50 : parseInt(pct)
 
     const canvas = createCanvas(100, 100)
     draw(canvas, pctAsNum)
@@ -36,6 +72,129 @@ function registerRoutes(app) {
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
   })
+
+  app.get('/work-timer/start-menu', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+    const now = moment()
+    res.json({
+      menus: [
+        {
+          title: `Now (${now.format('HH:mm')})`,
+          dynamicSubMenu: `${root}/work-timer/now-menu`,
+          action: `${root}/work-timer/start`,
+          method:'POST',
+          json: payload(now.hours(), now.minutes()),
+        },
+        {title: 'Common Times', staticSubMenu: `${root}/work-timer/common-times`},
+        {title: 'All Start times', staticSubMenu: `${root}/work-timer/all-times`},
+      ]
+    })
+  })
+
+  app.get('/work-timer/now-menu', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+
+    const now = moment()
+    const remainder = (now.minute() % 5);
+    now.add(-remainder, "minutes")
+
+    const nowTimes = [...Array(6)].map(x => ({
+      title: now.format('HH:mm'),
+      action: `${root}/work-timer/start`, method:'POST', json: payload(now.hours(), now.minutes()),
+      _: now.add(5, "minutes").format("")
+    }))
+
+    res.json({
+      menus: nowTimes
+    })
+  })
+
+  app.get('/work-timer/common-times', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+
+    const common = moment().set("hour", 8).set("minute", 0)
+    const commonTimes = [...Array(9)].map(x => ({
+      title: common.format('HH:mm'),
+      action: `${root}/work-timer/start`, method:'POST', json: payload(common.hours(), common.minutes()),
+      _: common.add(15, "minutes").format("")
+    }))
+
+    res.json({
+      menus: commonTimes
+    })
+  })
+
+  const quarters = [
+    {t:'Night', q: 'night', s: 0},
+    {t:'Morning', q: 'morning', s:6},
+    {t:'Afternoon', q: 'afternoon', s:12},
+    {t:'Evening', q: 'evening', s:18},
+  ]
+  app.get('/work-timer/all-times', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+    res.json({
+      menus: quarters.map(({t, q}) => ({title: t, staticSubMenu: `${root}/work-timer/all-times/q/${q}`}))
+    })
+  })
+
+  app.get('/work-timer/all-times/q/:q', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+    const {q} = req.params
+    const s = (quarters.find(x => x.q === q) || {s: 6}).s
+    res.json({
+      menus: range(s, 6)
+        .map(h => ({
+          title: `${h}:00`,
+          staticSubMenu: `${root}/work-timer/all-times/h/${h}`,
+          action: `${root}/work-timer/start`, method:'POST', json: payload(h),
+        }))
+    })
+  })
+
+  app.get('/work-timer/all-times/h/:h', (req, res) => {
+    const root = `${req.protocol}://${req.get('host')}`
+    const {h} = req.params
+    res.json({
+      menus: range(0, 60)
+        .map(m => ({
+          title: `${h}:${('0'+m).slice(-2)}`,
+          action: `${root}/work-timer/start`, method:'POST', json: payload(parseInt(h), m),
+        }))
+    })
+  })
+
+  app.delete('/work-timer/current-event', async (req, res) =>{
+    const r = await fetch('https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent', {
+      method: 'DELETE'
+    })
+    const deleteWorkTimerData = await r.json()
+    console.log('deleteWorkTimerData:', deleteWorkTimerData)
+    res.json(deleteWorkTimerData)
+  })
+
+  app.post('/work-timer/start', bodyParser.json(), async (req, res) => {
+    const formBody = Object.keys(req.body).reduce((p, c) => {
+      var encodedKey = encodeURIComponent(c);
+      var encodedValue = encodeURIComponent(req.body[c]);
+      return [...p, encodedKey + "=" + encodedValue]
+    }, []).join('&')
+
+    console.log('formBody:', formBody)
+
+    const r = await fetch('https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent', {
+      method: 'POST',
+      body: formBody,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+    })
+
+    res.send()
+  })
+}
+
+function range(s, c) {
+  return [...new Array(c)].map((_, i) => i+s)
 }
 
 function draw(canvas, pct) {
