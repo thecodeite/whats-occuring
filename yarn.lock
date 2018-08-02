@@ -2,6 +2,13 @@
 # yarn lockfile v1
 
 
+"@codeite/upcoming-responsibilities@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@codeite/upcoming-responsibilities/-/upcoming-responsibilities-1.0.1.tgz#a9fe8947af644a5456be049d395b2fa5562a8c3f"
+  dependencies:
+    iso8601-repeating-interval "^0.1.4"
+    moment "^2.22.2"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -904,6 +911,12 @@ isexe@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
 
+iso8601-repeating-interval@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/iso8601-repeating-interval/-/iso8601-repeating-interval-0.1.4.tgz#67284d6e864d98cf9f824d35aa96f5451dd4fa35"
+  dependencies:
+    moment "^2.17.1"
+
 isobject@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-2.1.0.tgz#f065561096a3f1da2ef46272f815c840d87e0c89"
@@ -1061,7 +1074,7 @@ mkdirp@^0.5.0, mkdirp@^0.5.1:
   dependencies:
     minimist "0.0.8"
 
-moment@^2.22.2:
+moment@^2.17.1, moment@^2.22.2:
   version "2.22.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.2.tgz#3c257f9839fc0e93ff53149632239eb90783ff66"
 

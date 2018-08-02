@@ -56,7 +56,7 @@ async function makeOccurance (root) {
 async function readWorkTimer () {
   const r = await fetch('https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent')
   const workTimerData = await r.json()
-  console.log('workTimerData:', workTimerData)
+  // console.log('workTimerData:', workTimerData)
   return workTimerData
 }
 
@@ -76,6 +76,8 @@ function registerRoutes(app) {
   app.get('/work-timer/start-menu', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
     const now = moment()
+    const remainder = (now.minute() % 5);
+    const nowIsh = moment(now).add(-remainder, "minutes")
     res.json({
       menus: [
         {
@@ -84,6 +86,13 @@ function registerRoutes(app) {
           action: `${root}/work-timer/start`,
           method:'POST',
           json: payload(now.hours(), now.minutes()),
+        },
+        {
+          title: `Now ish(${nowIsh.format('HH:mm')})`,
+          dynamicSubMenu: `${root}/work-timer/now-menu`,
+          action: `${root}/work-timer/start`,
+          method:'POST',
+          json: payload(nowIsh.hours(), nowIsh.minutes()),
         },
         {title: 'Common Times', staticSubMenu: `${root}/work-timer/common-times`},
         {title: 'All Start times', staticSubMenu: `${root}/work-timer/all-times`},
@@ -97,6 +106,7 @@ function registerRoutes(app) {
     const now = moment()
     const remainder = (now.minute() % 5);
     now.add(-remainder, "minutes")
+    now.add(-25, 'minutes')
 
     const nowTimes = [...Array(6)].map(x => ({
       title: now.format('HH:mm'),

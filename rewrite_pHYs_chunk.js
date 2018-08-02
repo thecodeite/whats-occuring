@@ -142,7 +142,7 @@ CRC32.str = crc32_str;
       String.fromCharCode(chunk[3])
     );
 
-	console.log("chunk found " + name + ", length = " + (length-4));
+	// console.log("chunk found " + name + ", length = " + (length-4));
 
 
 	var chunkDataStart = idx;
@@ -167,7 +167,7 @@ CRC32.str = crc32_str;
         'CRC values for ' + name + ' header do not match, PNG file is likely corrupted'
       )
     } else {
-	console.log("CRCs match! " + crcExpect + " " + crcActual + " " + chunk.length);
+
 	}
 
 	if (name == "IDAT") {
@@ -235,7 +235,7 @@ CRC32.str = crc32_str;
 	}
 
 	if (name == "pHYs") {
-		console.log("pHYs chunk found, rewriting!!!!!!!!!!!!!");
+		// console.log("pHYs chunk found, rewriting!!!!!!!!!!!!!");
 
 		var phys = new Uint8Array(13);
 		var i = 0;

@@ -2,8 +2,11 @@ require('dotenv').config()
 
 const express = require('express')
 
-const fitbit = require('./fitbit')
-const workTimer = require('./workTimer')
+const services = [
+  require('./fitbit'),
+  require('./workTimer'),
+  require('./tasks'),
+]
 
 const app = express()
 
@@ -14,17 +17,13 @@ app.use((req, res, next) => {
   next()
 })
 
-fitbit.registerRoutes(app)
-workTimer.registerRoutes(app)
-
 app.get('/', async (req, res) => {
   const root = `${req.protocol}://${req.get('host')}`
 
   try {
-    const occurences = await Promise.all([
-      workTimer.makeOccurance(root),
-      fitbit.makeOccurance(root)
-    ])
+    const occurences = await Promise.all(
+      services.map(s => s.makeOccurance(root))
+    )
     res.json({
       occurences
     })
@@ -37,7 +36,17 @@ app.get('/', async (req, res) => {
 
 app.use('/public', express.static('public'))
 
-app.listen(12011, e => {
-  if (e) console.error('Failed to listen on port 12011:', 12011)
-  else console.log('Head to 12011 to feel the shizzle')
+Promise.all(services.map(async s => {
+  const init = s.init || (() => Promise.resolve())
+  await init()
+  s.registerRoutes(app)
+})).then(() => {
+  app.listen(12011, e => {
+    if (e) console.error('Failed to listen on port 12011:', 12011)
+    else console.log('Head to 12011 to feel the shizzle')
+  })
+}).catch(e => {
+  console.error('init failed')
+  console.error(e)
 })
+
