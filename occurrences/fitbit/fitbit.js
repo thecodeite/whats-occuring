@@ -10,7 +10,7 @@ module.exports = {
   name,
   init,
   registerRoutes,
-  makeOccurance
+  makeOccurrence
 }
 
 const cache = new DataCache('fitibit')
@@ -18,12 +18,12 @@ async function init () {
   return await cache.init()
 }
 
-async function makeOccurance (root, clearCache) {
+async function makeOccurrence (root, clearCache) {
   const fitBitData = await readFitbitData(clearCache)
 
   const icon = (() => {
     const hours = new Date().getHours()
-    if (fitBitData.hourSteps < 0) return `${root}/fitbit/cross.png`
+    if (fitBitData.hourSteps < 0) return `${root}/common/cross.png`
 
     if (hours >= 9 && hours <= 17) {
       if (fitBitData.hourSteps < 250) {
@@ -123,16 +123,4 @@ async function readFitbitData (clearCache) {
 
 function registerRoutes (app) {
   app.get('/fitbit-steps/:num.png', fitBitImg)
-
-  // app.get('/fitbit/tick.png', async (req, res) => {
-  //   const buffer = await fs.readFile('./public/tick-100px.png')
-  //   res.setHeader('content-type', 'image/png')
-  //   res.send(addRes(buffer))
-  // })
-
-  // app.get('/fitbit/cross.png', async (req, res) => {
-  //   const buffer = await fs.readFile('./public/cross-100px.png')
-  //   res.setHeader('content-type', 'image/png')
-  //   res.send(addRes(buffer))
-  // })
 }

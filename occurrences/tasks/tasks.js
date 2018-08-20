@@ -17,7 +17,7 @@ const name = 'tasks'
 module.exports = {
   name,
   registerRoutes,
-  makeOccurance,
+  makeOccurrence,
   init
 }
 
@@ -26,7 +26,7 @@ async function init () {
   return await cache.init()
 }
 
-async function makeOccurance (root) {
+async function makeOccurrence (root) {
   const { taskData, upcoming } = await readTaskData()
 
   const overdueCount = upcoming.filter(x => x.overdue).length
@@ -37,7 +37,7 @@ async function makeOccurance (root) {
     ? `${root}/error/${overdueCount}.png`
     : dueCount > 0
         ? `${root}/warning/${dueCount}.png`
-        : `${root}/fitbit/tick.png`
+        : `${root}/common/tick.png`
 
   return {
     name,
@@ -245,31 +245,4 @@ function registerRoutes (app) {
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
   })
-
-  // app.get('/number/:num.png', (req, res) => {
-  //   const {num} = req.params
-  //   const {color} = req.query
-  //   const canvas = createCanvas(Math.floor(num.length * 30), 100)
-
-  //   const context = canvas.getContext('2d')
-
-  //   context.fillStyle = color || 'black'
-  //   context.font = '45px sans-serif'
-  //   context.fillText(num, 0, 45);
-
-  //   res.setHeader('content-type', 'image/png')
-  //   res.send(addRes(canvas.toBuffer('image/png')))
-  // })
-
-  // app.get('/fitbit/tick.png', async (req, res) => {
-  //   const buffer = await fs.readFile('./public/tick-100px.png')
-  //   res.setHeader('content-type', 'image/png')
-  //   res.send(addRes(buffer))
-  // })
-
-  // app.get('/fitbit/cross.png', async (req, res) => {
-  //   const buffer = await fs.readFile('./public/cross-100px.png')
-  //   res.setHeader('content-type', 'image/png')
-  //   res.send(addRes(buffer))
-  // })
 }

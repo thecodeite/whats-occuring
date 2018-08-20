@@ -10,7 +10,7 @@ const name = 'workTimer'
 module.exports = {
   name,
   registerRoutes,
-  makeOccurance
+  makeOccurrence
 }
 
 function payload (hours, minutes = 0) {
@@ -24,7 +24,7 @@ function payload (hours, minutes = 0) {
   }
 }
 
-async function makeOccurance (root) {
+async function makeOccurrence (root) {
   const workTimerData = await readWorkTimer()
 
   const menus = [

@@ -2,11 +2,14 @@ require('dotenv').config()
 
 const express = require('express')
 
+
+const common = require('./shared/common')
 const services = [
-  require('./occurences/fitbit/fitbit'),
-  require('./occurences/workTimer/workTimer'),
-  require('./occurences/tasks/tasks')
+  require('./occurrences/fitbit/fitbit'),
+  require('./occurrences/workTimer/workTimer'),
+  require('./occurrences/tasks/tasks')
 ]
+
 
 const app = express()
 
@@ -21,11 +24,17 @@ app.get('/', async (req, res) => {
   const root = `${req.protocol}://${req.get('host')}`
 
   try {
-    const occurences = await Promise.all(
-      services.map(s => s.makeOccurance(root))
-    )
+    const occurrences = (await Promise.all(
+      services.map(s => {
+        try {
+          return s.makeOccurrence(root)
+        } catch (e) {
+          console.error('e:', e)
+        }
+      })
+    )).filter(x => x)
     res.json({
-      occurences
+      occurrences
     })
   } catch (e) {
     console.trace(e)
@@ -33,14 +42,16 @@ app.get('/', async (req, res) => {
   }
 })
 
+
+
 services.map(({ name }) => {
   app.get(`/${name}`, async (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
 
     try {
-      const occurence = s.makeOccurance(root)
+      const occurrence = s.makeOccurrence(root)
       res.json({
-        occurence
+        occurrence
       })
     } catch (e) {
       console.trace(e)
@@ -52,9 +63,9 @@ services.map(({ name }) => {
     const root = `${req.protocol}://${req.get('host')}`
 
     try {
-      const occurence = s.makeOccurance(root, true)
+      const occurrence = s.makeOccurrence(root, true)
       res.json({
-        occurence
+        occurrence
       })
     } catch (e) {
       console.trace(e)
@@ -65,17 +76,20 @@ services.map(({ name }) => {
 
 app.use('/public', express.static('public'))
 
+const port = parseInt(process.env.PORT || 'port', 10)
+
 Promise.all(
   services.map(async s => {
     const init = s.init || (() => Promise.resolve())
     await init()
     s.registerRoutes(app)
+    common.registerRoutes(app)
   })
 )
   .then(() => {
-    app.listen(12011, e => {
-      if (e) console.error('Failed to listen on port 12011:', 12011)
-      else console.log('Head to 12011 to feel the shizzle')
+    app.listen(port, e => {
+      if (e) console.error(`Failed to listen on port ${port}:`, port)
+      else console.log(`Head to port ${port} to feel the shizzle`)
     })
   })
   .catch(e => {
