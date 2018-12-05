@@ -13,9 +13,12 @@ module.exports = {
   makeOccurrence
 }
 
-function payload (hours, minutes = 0) {
+function payload(hours, minutes = 0) {
   const m = moment().startOf('day')
-  const start = m.add(hours, 'hours').add(minutes, 'minutes').format()
+  const start = m
+    .add(hours, 'hours')
+    .add(minutes, 'minutes')
+    .format()
   const end = m.add(8, 'hours').format()
   return {
     description: `Work timer: ${start}`,
@@ -24,7 +27,7 @@ function payload (hours, minutes = 0) {
   }
 }
 
-async function makeOccurrence (root) {
+async function makeOccurrence(root) {
   const workTimerData = await readWorkTimer()
 
   const menus = [
@@ -52,15 +55,16 @@ async function makeOccurrence (root) {
     }
   }
 
+  const pct = 100 - Math.floor(workTimerData.percent * 100)
   return {
     name,
-    icon: `${root}/work-timer/dynamic-icon.png?pct=${100 - Math.floor(workTimerData.percent * 100)}`,
+    icon: `${root}/work-timer/dynamic-icon.png?pct=${pct}`,
     toolTip: workTimerData.leftDesc,
     menus
   }
 }
 
-async function readWorkTimer () {
+async function readWorkTimer() {
   const r = await fetch(
     'https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent'
   )
@@ -69,14 +73,18 @@ async function readWorkTimer () {
   return workTimerData
 }
 
-function registerRoutes (app) {
+function registerRoutes(app) {
   app.get('/work-timer/dynamic-icon.png', (req, res) => {
     const { pct } = req.query
     console.log('pct:', pct)
-    const pctAsNum = pct === undefined && pct === '' ? 50 : parseInt(pct)
+    let pctAsNum = parseInt(pct)
 
     const canvas = createCanvas(100, 100)
-    draw(canvas, pctAsNum)
+    if (pctAsNum >= 0 && pctAsNum <= 100) {
+      draw(canvas, pctAsNum)
+    } else {
+      draw(canvas)
+    }
 
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
@@ -138,7 +146,9 @@ function registerRoutes (app) {
   app.get('/work-timer/common-times', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
 
-    const common = moment().set('hour', 8).set('minute', 0)
+    const common = moment()
+      .set('hour', 8)
+      .set('minute', 0)
     const commonTimes = [...Array(9)].map(x => ({
       title: common.format('HH:mm'),
       action: `${root}/work-timer/start`,
@@ -248,15 +258,19 @@ function registerRoutes (app) {
   })
 }
 
-function range (s, c, step = 1) {
+function range(s, c, step = 1) {
   return [...new Array(c / step)].map((_, i) => i * step + s)
 }
 
-function draw (canvas, pct) {
+function draw(canvas, pct) {
   const context = canvas.getContext('2d')
 
+  const drawX = pct === undefined
+  console.log('drawX:', drawX)
+  if (!(pct >= 0 || pct <= 100)) pct = 0
+
   const start = Math.PI * 1.5
-  const end = start + (100 - pct) * Math.PI * 2 / 100
+  const end = start + ((100 - pct) * Math.PI * 2) / 100
 
   const size = canvas.width
 

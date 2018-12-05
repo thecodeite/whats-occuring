@@ -1,18 +1,18 @@
 const fs = require('fs-extra')
 
 class DataCache {
-  constructor(name) {
-    this.cacheFile = `./${name}.cache`
+  constructor(name, path = '.') {
+    this.cacheFile = `${path}/${name}.cache`
     this.name = name
   }
 
-  now () {
-    return (new Date()).getTime()
+  now() {
+    return new Date().getTime()
   }
 
-  async init () {
+  async init() {
     try {
-      const {data, expires} = JSON.parse(await fs.readFile(this.cacheFile))
+      const { data, expires } = JSON.parse(await fs.readFile(this.cacheFile))
       this.data = data
       this.expires = expires
     } catch (e) {
@@ -20,18 +20,24 @@ class DataCache {
       this.expires = 0
     }
 
-    console.log(`Cache ${this.name} init with`, JSON.stringify(this).slice(0, 50))
+    console.log(
+      `Cache ${this.name} init with`,
+      JSON.stringify(this).slice(0, 50)
+    )
   }
 
-  async set (data, secondsValid) {
+  async set(data, secondsValid) {
     this.data = data
-    const expires = this.expires = (new Date()).getTime() + secondsValid * 1000
-    return await fs.writeFile(this.cacheFile, JSON.stringify({data, expires}, null, '  '))
+    const expires = (this.expires = new Date().getTime() + secondsValid * 1000)
+    return await fs.writeFile(
+      this.cacheFile,
+      JSON.stringify({ data, expires }, null, '  ')
+    )
   }
 
-  expired () {
+  expired() {
     // console.log('this.expires , (new Date()).getTime(), this.expires > (new Date()).getTime():', this.expires, (new Date()).getTime(), this.expires > (new Date()).getTime())
-    return (new Date()).getTime() > this.expires
+    return new Date().getTime() > this.expires
   }
 }
 

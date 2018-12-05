@@ -2,7 +2,6 @@ require('dotenv').config()
 
 const express = require('express')
 
-
 const common = require('./shared/common')
 const services = [
   require('./occurrences/fitbit/fitbit'),
@@ -10,13 +9,17 @@ const services = [
   require('./occurrences/tasks/tasks')
 ]
 
-
 const app = express()
 
 app.use((req, res, next) => {
   const output = [req.method, req.path]
   if (Object.keys(req.query).length) output.push(req.query)
   console.log(...output)
+  next()
+})
+
+app.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*')
   next()
 })
 
@@ -41,8 +44,6 @@ app.get('/', async (req, res) => {
     res.status(500).send({ error: e.toString() })
   }
 })
-
-
 
 services.map(({ name }) => {
   app.get(`/${name}`, async (req, res) => {
@@ -76,7 +77,7 @@ services.map(({ name }) => {
 
 app.use('/public', express.static('public'))
 
-const port = parseInt(process.env.PORT || 'port', 10)
+const port = parseInt(process.env.PORT || '22013', 10)
 
 Promise.all(
   services.map(async s => {

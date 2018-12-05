@@ -21,23 +21,37 @@ module.exports = {
   init
 }
 
-const cache = new DataCache('tasks')
-async function init () {
+const cache = new DataCache('tasks', __dirname)
+async function init() {
   return await cache.init()
 }
 
-async function makeOccurrence (root) {
-  const { taskData, upcoming } = await readTaskData()
+async function makeOccurrence(root) {
+  let upcoming = null
+  try {
+    const res = await readTaskData()
+    upcoming = res.upcoming
+  } catch (e) {
+    console.log('e:', e)
+    return {
+      name,
+      icon: `${root}/common/cross.png`,
+      colour: true,
+      toolTip: 'Error reading tasks:' + e,
+      menu: []
+    }
+  }
 
   const overdueCount = upcoming.filter(x => x.overdue).length
   const dueCount = upcoming.filter(x => x.isDue).length
   const toolTip = `Overdue: ${overdueCount} Due ${dueCount}`
 
-  const icon = overdueCount > 0
-    ? `${root}/error/${overdueCount}.png`
-    : dueCount > 0
-        ? `${root}/warning/${dueCount}.png`
-        : `${root}/common/tick.png`
+  const icon =
+    overdueCount > 0
+      ? `${root}/error/${overdueCount}.png`
+      : dueCount > 0
+      ? `${root}/warning/${dueCount}.png`
+      : `${root}/common/tick.png`
 
   return {
     name,
@@ -65,7 +79,7 @@ async function makeOccurrence (root) {
   }
 }
 
-async function readTaskData () {
+async function readTaskData() {
   let taskData
   if (cache.data && !cache.expired()) {
     // console.log('tasks using cache')
@@ -76,6 +90,11 @@ async function readTaskData () {
         Cookie: `lists=${listsCookie}`
       }
     })
+
+    if (!r.ok) {
+      const mgs = await r.text()
+      throw new Error(mgs)
+    }
 
     taskData = await r.json()
     cache.set(taskData, 0)
@@ -105,7 +124,7 @@ async function readTaskData () {
   // }
 }
 
-function makeMenu (root, title, tasks) {
+function makeMenu(root, title, tasks) {
   return {
     title,
     menus: tasks.map(x => ({
@@ -113,17 +132,17 @@ function makeMenu (root, title, tasks) {
       menus: [
         x.done
           ? {
-            title: '☐ Mark incomplete',
-            action: `${root}/tasks/status/${x.id}`,
-            method: 'POST',
-            json: { done: false }
-          }
+              title: '☐ Mark incomplete',
+              action: `${root}/tasks/status/${x.id}`,
+              method: 'POST',
+              json: { done: false }
+            }
           : {
-            title: '☑ Mark done',
-            action: `${root}/tasks/status/${x.id}`,
-            method: 'POST',
-            json: { done: true }
-          },
+              title: '☑ Mark done',
+              action: `${root}/tasks/status/${x.id}`,
+              method: 'POST',
+              json: { done: true }
+            },
         { title: `deadline: ${moment(x.date).format('YYYY-MM-DD')}` },
         { title: `due: ${moment(x.due).format('YYYY-MM-DD')}` }
       ]
@@ -133,7 +152,7 @@ function makeMenu (root, title, tasks) {
   }
 }
 
-function registerRoutes (app) {
+function registerRoutes(app) {
   app.post('/tasks/status/:id', bodyParser.json(), async (req, res) => {
     const { id } = req.params
     // console.log('id:', id)
@@ -174,19 +193,34 @@ function registerRoutes (app) {
   })
 
   app.get('/tasks/top-ten-menu', async (req, res) => {
-    const { upcoming } = await readTaskData()
-    const root = `${req.protocol}://${req.get('host')}`
-    res.json(makeMenu(root, 'Top Ten', upcoming))
+    try {
+      const { upcoming } = await readTaskData()
+      const root = `${req.protocol}://${req.get('host')}`
+      res.json(makeMenu(root, 'Top Ten', upcoming))
+    } catch (e) {
+      console.log('e:', e)
+      res.status(400).json(e)
+    }
   })
   app.get('/tasks/overdue-menu', async (req, res) => {
-    const { upcoming } = await readTaskData()
-    const root = `${req.protocol}://${req.get('host')}`
-    res.json(makeMenu(root, 'Top Ten', upcoming.filter(x => x.overdue)))
+    try {
+      const { upcoming } = await readTaskData()
+      const root = `${req.protocol}://${req.get('host')}`
+      res.json(makeMenu(root, 'Top Ten', upcoming.filter(x => x.overdue)))
+    } catch (e) {
+      console.log('e:', e)
+      res.status(400).json(e)
+    }
   })
   app.get('/tasks/due-menu', async (req, res) => {
-    const { upcoming } = await readTaskData()
-    const root = `${req.protocol}://${req.get('host')}`
-    res.json(makeMenu(root, 'Top Ten', upcoming.filter(x => x.isDue)))
+    try {
+      const { upcoming } = await readTaskData()
+      const root = `${req.protocol}://${req.get('host')}`
+      res.json(makeMenu(root, 'Top Ten', upcoming.filter(x => x.isDue)))
+    } catch (e) {
+      console.log('e:', e)
+      res.status(400).json(e)
+    }
   })
   app.get('/error/:number.png', (req, res) => {
     const data = {
@@ -203,9 +237,10 @@ function registerRoutes (app) {
     ctx.fill()
 
     const baseFontSize = 75
-    const fontSize = data.number === 0
-      ? `${baseFontSize}px`
-      : `${baseFontSize - 20 * Math.floor(Math.log10(data.number))}px`
+    const fontSize =
+      data.number === 0
+        ? `${baseFontSize}px`
+        : `${baseFontSize - 20 * Math.floor(Math.log10(data.number))}px`
     ctx.beginPath()
     ctx.fillStyle = 'white'
     ctx.font = `${fontSize} sans-serif`
@@ -232,9 +267,10 @@ function registerRoutes (app) {
     ctx.fill()
 
     const baseFontSize = 75
-    const fontSize = data.number === 0
-      ? `${baseFontSize}px`
-      : `${baseFontSize - 20 * Math.floor(Math.log10(data.number))}px`
+    const fontSize =
+      data.number === 0
+        ? `${baseFontSize}px`
+        : `${baseFontSize - 20 * Math.floor(Math.log10(data.number))}px`
     ctx.beginPath()
     ctx.fillStyle = 'white'
     ctx.font = `${fontSize} sans-serif`

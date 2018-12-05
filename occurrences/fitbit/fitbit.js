@@ -14,11 +14,11 @@ module.exports = {
 }
 
 const cache = new DataCache('fitibit')
-async function init () {
+async function init() {
   return await cache.init()
 }
 
-async function makeOccurrence (root, clearCache) {
+async function makeOccurrence(root, clearCache) {
   const fitBitData = await readFitbitData(clearCache)
 
   const icon = (() => {
@@ -27,11 +27,18 @@ async function makeOccurrence (root, clearCache) {
 
     if (hours >= 9 && hours <= 17) {
       if (fitBitData.hourSteps < 250) {
-        return `${root}/fitbit-steps/${250 - fitBitData.hourSteps}.png?color=${fitBitData.urgent ? 'red' : 'black'}&hours=${fitBitData.hours}`
+        return `${root}/fitbit-steps/${250 - fitBitData.hourSteps}.png?color=${
+          fitBitData.urgent ? 'red' : 'black'
+        }&hours=${fitBitData.hours}`
       }
+      return `${root}/fitbit-steps/tick.png?color=black&hours=${
+        fitBitData.hours
+      }`
     }
 
-    return `${root}/fitbit-steps/tick.png?color=rgba(128,128,128,.25)&hours=${fitBitData.hours}`
+    return `${root}/fitbit-steps/tick.png?color=rgba(128,128,128,.25)&hours=${
+      fitBitData.hours
+    }`
   })()
 
   return {
@@ -43,7 +50,7 @@ async function makeOccurrence (root, clearCache) {
   }
 }
 
-async function readFitbitData (clearCache) {
+async function readFitbitData(clearCache) {
   let fitBitData
   if (!clearCache && cache.data && !cache.expired()) {
     // console.log('fitbit using cache')
@@ -114,13 +121,17 @@ async function readFitbitData (clearCache) {
   const hourSteps = agg[hour] || 0
 
   return {
-    toolTip: Object.entries(agg).map(([h, v]) => `${v}`).join(','),
-    hours: Object.entries(agg).map(([h, v]) => (v >= 250 ? 'x' : '.')).join(''),
+    toolTip: Object.entries(agg)
+      .map(([h, v]) => `${v}`)
+      .join(','),
+    hours: Object.entries(agg)
+      .map(([h, v]) => (v >= 250 ? 'x' : '.'))
+      .join(''),
     hourSteps,
     urgent: hour >= 9 && hour <= 17 && minute > 50
   }
 }
 
-function registerRoutes (app) {
+function registerRoutes(app) {
   app.get('/fitbit-steps/:num.png', fitBitImg)
 }
