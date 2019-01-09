@@ -7,7 +7,7 @@ module.exports = {
     const { color, hours } = req.query
     const canvas = createCanvas(100, 100)
     const ctx = canvas.getContext('2d')
-    ;(function (data) {
+    ;(function(data) {
       ctx.fillStyle = data.color || 'black'
       ctx.strokeStyle = data.color || 'black'
 
@@ -15,17 +15,13 @@ module.exports = {
         ctx.beginPath()
         let [x, y] = [20, 20]
         ctx.moveTo(x, y)
-        ;[
-          [10, 10],
-          [20, -20],
-          [10, 10],
-          [-30, 30],
-          [-20, -20]
-        ].forEach(([dx, dy]) => {
-          x += dx
-          y += dy
-          ctx.lineTo(x, y)
-        })
+        ;[[10, 10], [20, -20], [10, 10], [-30, 30], [-20, -20]].forEach(
+          ([dx, dy]) => {
+            x += dx
+            y += dy
+            ctx.lineTo(x, y)
+          }
+        )
 
         ctx.fill()
       } else {

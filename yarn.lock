@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@codeite/upcoming-responsibilities@1.2.2":
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/@codeite/upcoming-responsibilities/-/upcoming-responsibilities-1.2.2.tgz#b8f8a7803ad60ab2aa3f6598e9031779eb088f0f"
-  integrity sha1-uPingDrWCrKqP2WY6QMXeesIjw8=
+"@codeite/upcoming-responsibilities@1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@codeite/upcoming-responsibilities/-/upcoming-responsibilities-1.3.0.tgz#b429c454e6cf17dbd5596135b755c5db8ea2af37"
+  integrity sha512-H/MUggaO+vMui4BCYKrvouaxRMwoqOVsByjRyA5yA0bADBz997+CmOH5Fkf7TW2Crm8CQvfFg+6w2G3HuD8iaQ==
   dependencies:
     iso8601-repeating-interval "^0.1.4"
     moment "^2.22.2"
