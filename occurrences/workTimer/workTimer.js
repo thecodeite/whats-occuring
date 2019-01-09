@@ -4,13 +4,15 @@ const moment = require('moment')
 const bodyParser = require('body-parser')
 
 const { addRes } = require('../../shared/helpers')
+const { inWorkHours } = require('../../shared/timesHelper')
 
 const name = 'workTimer'
 
 module.exports = {
   name,
   registerRoutes,
-  makeOccurrence
+  makeOccurrence,
+  shouldShow: inWorkHours
 }
 
 function payload(hours, minutes = 0) {

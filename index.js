@@ -6,7 +6,8 @@ const common = require('./shared/common')
 const services = [
   require('./occurrences/fitbit/fitbit'),
   require('./occurrences/workTimer/workTimer'),
-  require('./occurrences/tasks/tasks')
+  require('./occurrences/tasks/tasks'),
+  require('./occurrences/buildStatus/buildStatus')
 ]
 
 const app = express()
@@ -29,6 +30,16 @@ app.get('/', async (req, res) => {
   try {
     const occurrences = (await Promise.all(
       services.map(s => {
+        if (typeof s.shouldShow === 'function' && !s.shouldShow()) {
+          return {
+            name: s.name,
+            icon: `${root}/public/000000-0.0.png`,
+            colour: false,
+            toolTip: '',
+            usesCache: true
+          }
+        }
+
         try {
           return s.makeOccurrence(root)
         } catch (e) {
