@@ -24,9 +24,11 @@ async function makeOccurrence(root, clearCache) {
   const buildStatus = await readBuildStatusData(clearCache)
   const master = buildStatus.find(x => x.ref === 'master')
 
-  let icon = ``
+  let icon = ''
+  let toolTip = ''
   if (master) {
-    if (master.status === 'building')
+    toolTip = master.status
+    if (master.status === 'running')
       icon = `${root}/build-status/building-building.png`
     if (master.status === 'success')
       icon = `${root}/build-status/building-good.png`
@@ -38,7 +40,7 @@ async function makeOccurrence(root, clearCache) {
     name,
     icon,
     colour: true,
-    toolTip: 'hello',
+    toolTip,
     usesCache: true
   }
 }
