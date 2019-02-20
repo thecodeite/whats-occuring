@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  whatsoccuring:
+    image: 'whats-occuring:0.2beta'
+    ports:
+      - '22013:22013'
+    env_file: [.env]
+    restart: unless-stopped

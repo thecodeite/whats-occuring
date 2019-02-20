@@ -47,8 +47,17 @@ app.get('/', async (req, res) => {
         }
       })
     )).filter(x => x)
+
+    const smallScreenController = {
+      name: 'smallscreen',
+      icon: `${root}/public/small-screen-icon.png`,
+      colour: true,
+      toolTip: '',
+      usesCache: true
+    }
+
     res.json({
-      occurrences
+      occurrences: [...occurrences, smallScreenController]
     })
   } catch (e) {
     console.trace(e)

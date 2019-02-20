@@ -1,4 +1,4 @@
-const { createCanvas } = require('canvas')
+const { createCanvas, registerFont } = require('canvas')
 const fetch = require('node-fetch')
 const moment = require('moment')
 const bodyParser = require('body-parser')
@@ -228,6 +228,19 @@ function registerRoutes(app) {
     }
     const { color } = req.query
 
+    registerFont('SF-Pro-Display-Regular.otf', {
+      family: 'SF',
+      weight: 'regulat'
+    })
+    registerFont('SF-Pro-Display-Semibold.otf', {
+      family: 'SFs',
+      weight: 'normal'
+    })
+    registerFont('SF-Compact-Rounded-Regular.otf', {
+      family: 'SFc',
+      weight: 'normal'
+    })
+
     const canvas = createCanvas(100, 100)
     const ctx = canvas.getContext('2d')
 
@@ -243,10 +256,11 @@ function registerRoutes(app) {
         : `${baseFontSize - 20 * Math.floor(Math.log10(data.number))}px`
     ctx.beginPath()
     ctx.fillStyle = 'white'
-    ctx.font = `${fontSize} sans-serif`
+    //ctx.font = `${fontSize} sans-serif`
+    ctx.font = `${fontSize} "SFs"`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText(data.number, 50, 55, 100)
+    ctx.fillText(data.number, canvas.width / 2, canvas.height / 2)
 
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))

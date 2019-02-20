@@ -28,5 +28,19 @@ module.exports = {
 
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
+  },
+  getIcon2: status => async (req, res) => {
+    const { text } = req.params
+    console.log('text:', text)
+    const canvas = createCanvas(100, 100)
+    const ctx = canvas.getContext('2d')
+    // ctx.fillStyle = 'white'
+    // ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    const image = await loadImage(`${appDir}/public/small-screen.png`)
+    ctx.drawImage(image, 10, 10, 80, 80)
+
+    res.setHeader('content-type', 'image/png')
+    res.send(addRes(canvas.toBuffer('image/png')))
   }
 }

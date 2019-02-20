@@ -1,10 +1,16 @@
-const { createCanvas } = require('canvas')
+const { createCanvas, registerFont } = require('canvas')
 const { addRes } = require('../../shared/helpers')
 
 module.exports = {
   fitBitImg: (req, res) => {
     const { num } = req.params
     const { color, hours } = req.query
+
+    registerFont('SF-Compact-Rounded-Regular.otf', {
+      family: 'SFc',
+      weight: 'normal'
+    })
+
     const canvas = createCanvas(100, 100)
     const ctx = canvas.getContext('2d')
     ;(function(data) {
@@ -25,7 +31,7 @@ module.exports = {
 
         ctx.fill()
       } else {
-        ctx.font = '45px sans-serif'
+        ctx.font = '45px SFc'
         ctx.fillText(data.num, 0, 45)
       }
 
