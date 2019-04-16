@@ -16,7 +16,9 @@ module.exports = {
 }
 
 function payload(hours, minutes = 0) {
-  const m = moment().startOf('day')
+  const m = moment()
+    .add(1, 'hour')
+    .startOf('day')
   const start = m
     .add(hours, 'hours')
     .add(minutes, 'minutes')
@@ -94,7 +96,7 @@ function registerRoutes(app) {
 
   app.get('/work-timer/start-menu', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
-    const now = moment()
+    const now = moment().add(1, 'hour') //BST
     const remainder = now.minute() % 5
     const nowIsh = moment(now).add(-remainder, 'minutes')
     res.json({
@@ -127,7 +129,7 @@ function registerRoutes(app) {
   app.get('/work-timer/now-menu', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
 
-    const now = moment()
+    const now = moment().add(1, 'hour') //BST
     const remainder = now.minute() % 5
     now.add(-remainder, 'minutes')
     now.add(-5, 'minutes')
@@ -149,6 +151,7 @@ function registerRoutes(app) {
     const root = `${req.protocol}://${req.get('host')}`
 
     const common = moment()
+      .add(1, 'hour') //BST
       .set('hour', 8)
       .set('minute', 0)
     const commonTimes = [...Array(9)].map(x => ({

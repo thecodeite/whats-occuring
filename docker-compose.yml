@@ -2,7 +2,7 @@ version: '3'
 
 services:
   whatsoccuring:
-    image: 'whats-occuring:0.2beta'
+    image: 'whats-occuring:1.1.0'
     ports:
       - '22013:22013'
     env_file: [.env]

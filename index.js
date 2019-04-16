@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const express = require('express')
+const bodyParser = require('body-parser')
 
 const common = require('./shared/common')
 const services = [
@@ -23,6 +24,8 @@ app.use((req, res, next) => {
   res.set('Access-Control-Allow-Origin', '*')
   next()
 })
+
+let hidden = []
 
 app.get('/', async (req, res) => {
   const root = `${req.protocol}://${req.get('host')}`
@@ -53,16 +56,49 @@ app.get('/', async (req, res) => {
       icon: `${root}/public/small-screen-icon.png`,
       colour: true,
       toolTip: '',
-      usesCache: true
+      usesCache: true,
+      menus: [
+        {
+          title: 'Occurrences:',
+          menus: occurrences.map(o => {
+            const isHidden = hidden.includes(o.name)
+            return {
+              title: `${isHidden ? '☐' : '☑'} ${o.name}`,
+              action: `${root}/hidden/${o.name}`,
+              method: 'POST',
+              json: { hide: Boolean(!isHidden) }
+            }
+          })
+        }
+      ]
     }
 
     res.json({
-      occurrences: [...occurrences, smallScreenController]
+      occurrences: [
+        ...occurrences.filter(o => !hidden.includes(o.name)),
+        smallScreenController
+      ]
     })
   } catch (e) {
     console.trace(e)
     res.status(500).send({ error: e.toString() })
   }
+})
+app.post('/hidden/:name', bodyParser.json(), (req, res) => {
+  const { name } = req.params
+  const { hide } = req.body
+
+  console.log({ name, hide })
+
+  hidden = hidden.filter(e => e !== name)
+
+  if (hide) {
+    hidden = [...hidden, name]
+  }
+
+  console.log('hidden:', hidden)
+
+  res.send()
 })
 
 services.map(({ name }) => {
