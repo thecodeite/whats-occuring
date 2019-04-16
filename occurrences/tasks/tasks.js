@@ -125,6 +125,7 @@ async function readTaskData() {
 }
 
 function makeMenu(root, title, tasks) {
+  console.log('tasks:', tasks)
   return {
     title,
     menus: tasks.map(x => ({
@@ -144,7 +145,11 @@ function makeMenu(root, title, tasks) {
               json: { done: true }
             },
         { title: `deadline: ${moment(x.date).format('YYYY-MM-DD')}` },
-        { title: `due: ${moment(x.due).format('YYYY-MM-DD')}` }
+        x.dueDate
+          ? {
+              title: `due: ${moment(x.dueDate).format('YYYY-MM-DD')}`
+            }
+          : { title: 'due on day' }
       ]
       // GET https://lists.codeite.net/list/~/resps/_/60c48fa0-f89c-11e6-9078-edfe494efaa6
       // PATCH https://lists.codeite.net/list/~/resps/_/60c48fa0-f89c-11e6-9078-edfe494efaa6 {"id":"60c48fa0-f89c-11e6-9078-edfe494efaa6","complete":"0_19"}
