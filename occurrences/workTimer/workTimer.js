@@ -8,6 +8,12 @@ const { inWorkHours } = require('../../shared/timesHelper')
 
 const name = 'workTimer'
 
+function niceTime(t) {
+  return moment(t)
+    .add(-1, 'hour')
+    .format('h:mm a')
+}
+
 module.exports = {
   name,
   registerRoutes,
@@ -38,17 +44,12 @@ async function makeOccurrence(root) {
     {
       title: 'Start at',
       dynamicSubMenu: `${root}/work-timer/start-menu`
+    },
+    {
+      title: 'Current Timer',
+      dynamicSubMenu: `${root}/work-timer/menu-current`
     }
   ]
-
-  if (workTimerData.percent > 0) {
-    menus.push({ title: ' ' })
-    menus.push({
-      title: 'Clear event',
-      action: `${root}/work-timer/current-event`,
-      method: 'DELETE'
-    })
-  }
 
   if (workTimerData.error) {
     return {
@@ -92,6 +93,42 @@ function registerRoutes(app) {
 
     res.setHeader('content-type', 'image/png')
     res.send(addRes(canvas.toBuffer('image/png')))
+  })
+
+  app.get('/work-timer/menu-current', async (req, res) => {
+    try {
+      const root = `${req.protocol}://${req.get('host')}`
+      const workTimerData = await readWorkTimer()
+
+      const menus = []
+      if (workTimerData.percent > 0) {
+        menus.push({
+          title: 'Clear event',
+          action: `${root}/work-timer/current-event`,
+          method: 'DELETE'
+        })
+        menus.push({
+          title: `Started at: ${niceTime(workTimerData.startTime)}`
+        })
+        menus.push({
+          title: `End at: ${niceTime(workTimerData.endTime)}`
+        })
+        menus.push({
+          title: 'Re-set start',
+          dynamicSubMenu: `${root}/work-timer/start-menu?reset=true`
+        })
+      } else {
+        menus.push({
+          title: 'Not started'
+        })
+      }
+
+      res.json({ menus })
+    } catch (e) {
+      res.menus({
+        title: e.toString()
+      })
+    }
   })
 
   app.get('/work-timer/start-menu', (req, res) => {
