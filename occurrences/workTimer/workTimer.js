@@ -7,33 +7,27 @@ const { addRes } = require('../../shared/helpers')
 const { inWorkHours } = require('../../shared/timesHelper')
 
 const name = 'workTimer'
+const timezone = 0
 
 function niceTime(t) {
-  return moment(t)
-    .add(-1, 'hour')
-    .format('h:mm a')
+  return moment(t).add(-1, 'hour').format('h:mm a')
 }
 
 module.exports = {
   name,
   registerRoutes,
   makeOccurrence,
-  shouldShow: inWorkHours
+  shouldShow: inWorkHours,
 }
 
 function payload(hours, minutes = 0) {
-  const m = moment()
-    .add(1, 'hour')
-    .startOf('day')
-  const start = m
-    .add(hours, 'hours')
-    .add(minutes, 'minutes')
-    .format()
+  const m = moment().add(timezone, 'hour').startOf('day')
+  const start = m.add(hours, 'hours').add(minutes, 'minutes').format()
   const end = m.add(8, 'hours').format()
   return {
     description: `Work timer: ${start}`,
     start,
-    end
+    end,
   }
 }
 
@@ -43,12 +37,12 @@ async function makeOccurrence(root) {
   const menus = [
     {
       title: 'Start at',
-      dynamicSubMenu: `${root}/work-timer/start-menu`
+      dynamicSubMenu: `${root}/work-timer/start-menu`,
     },
     {
       title: 'Current Timer',
-      dynamicSubMenu: `${root}/work-timer/menu-current`
-    }
+      dynamicSubMenu: `${root}/work-timer/menu-current`,
+    },
   ]
 
   if (workTimerData.error) {
@@ -56,7 +50,7 @@ async function makeOccurrence(root) {
       name,
       icon: `${root}/work-timer/dynamic-icon.png?pct=0`,
       toolTip: workTimerData.error,
-      menus
+      menus,
     }
   }
 
@@ -65,7 +59,7 @@ async function makeOccurrence(root) {
     name,
     icon: `${root}/work-timer/dynamic-icon.png?pct=${pct}`,
     toolTip: workTimerData.leftDesc,
-    menus
+    menus,
   }
 }
 
@@ -105,35 +99,35 @@ function registerRoutes(app) {
         menus.push({
           title: 'Clear event',
           action: `${root}/work-timer/current-event`,
-          method: 'DELETE'
+          method: 'DELETE',
         })
         menus.push({
-          title: `Started at: ${niceTime(workTimerData.startTime)}`
+          title: `Started at: ${niceTime(workTimerData.startTime)}`,
         })
         menus.push({
-          title: `End at: ${niceTime(workTimerData.endTime)}`
+          title: `End at: ${niceTime(workTimerData.endTime)}`,
         })
         menus.push({
           title: 'Re-set start',
-          dynamicSubMenu: `${root}/work-timer/start-menu?reset=true`
+          dynamicSubMenu: `${root}/work-timer/start-menu?reset=true`,
         })
       } else {
         menus.push({
-          title: 'Not started'
+          title: 'Not started',
         })
       }
 
       res.json({ menus })
     } catch (e) {
       res.menus({
-        title: e.toString()
+        title: e.toString(),
       })
     }
   })
 
   app.get('/work-timer/start-menu', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
-    const now = moment().add(1, 'hour') //BST
+    const now = moment().add(timezone, 'hour') //BST
     const remainder = now.minute() % 5
     const nowIsh = moment(now).add(-remainder, 'minutes')
     res.json({
@@ -142,45 +136,45 @@ function registerRoutes(app) {
           title: `Now (${now.format('HH:mm')})`,
           action: `${root}/work-timer/start`,
           method: 'POST',
-          json: payload(now.hours(), now.minutes())
+          json: payload(now.hours(), now.minutes()),
         },
         {
           title: `Now ish(${nowIsh.format('HH:mm')})`,
           dynamicSubMenu: `${root}/work-timer/now-menu`,
           action: `${root}/work-timer/start`,
           method: 'POST',
-          json: payload(nowIsh.hours(), nowIsh.minutes())
+          json: payload(nowIsh.hours(), nowIsh.minutes()),
         },
         {
           title: 'Common Times',
-          staticSubMenu: `${root}/work-timer/common-times`
+          staticSubMenu: `${root}/work-timer/common-times`,
         },
         {
           title: 'All Start times',
-          staticSubMenu: `${root}/work-timer/all-times`
-        }
-      ]
+          staticSubMenu: `${root}/work-timer/all-times`,
+        },
+      ],
     })
   })
 
   app.get('/work-timer/now-menu', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
 
-    const now = moment().add(1, 'hour') //BST
+    const now = moment().add(timezone, 'hour') //BST
     const remainder = now.minute() % 5
     now.add(-remainder, 'minutes')
     now.add(-5, 'minutes')
 
-    const nowTimes = [...Array(6)].map(x => ({
+    const nowTimes = [...Array(6)].map((x) => ({
       title: now.format('HH:mm'),
       action: `${root}/work-timer/start`,
       method: 'POST',
       json: payload(now.hours(), now.minutes()),
-      _: now.add(-5, 'minutes').format('')
+      _: now.add(-5, 'minutes').format(''),
     }))
 
     res.json({
-      menus: nowTimes
+      menus: nowTimes,
     })
   })
 
@@ -191,16 +185,16 @@ function registerRoutes(app) {
       .add(1, 'hour') //BST
       .set('hour', 8)
       .set('minute', 0)
-    const commonTimes = [...Array(9)].map(x => ({
+    const commonTimes = [...Array(9)].map((x) => ({
       title: common.format('HH:mm'),
       action: `${root}/work-timer/start`,
       method: 'POST',
       json: payload(common.hours(), common.minutes()),
-      _: common.add(15, 'minutes').format('')
+      _: common.add(15, 'minutes').format(''),
     }))
 
     res.json({
-      menus: commonTimes
+      menus: commonTimes,
     })
   })
 
@@ -208,30 +202,30 @@ function registerRoutes(app) {
     { t: 'Night', q: 'night', s: 0 },
     { t: 'Morning', q: 'morning', s: 6 },
     { t: 'Afternoon', q: 'afternoon', s: 12 },
-    { t: 'Evening', q: 'evening', s: 18 }
+    { t: 'Evening', q: 'evening', s: 18 },
   ]
   app.get('/work-timer/all-times', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
     res.json({
       menus: quarters.map(({ t, q }) => ({
         title: t,
-        staticSubMenu: `${root}/work-timer/all-times/q/${q}`
-      }))
+        staticSubMenu: `${root}/work-timer/all-times/q/${q}`,
+      })),
     })
   })
 
   app.get('/work-timer/all-times/q/:q', (req, res) => {
     const root = `${req.protocol}://${req.get('host')}`
     const { q } = req.params
-    const s = (quarters.find(x => x.q === q) || { s: 6 }).s
+    const s = (quarters.find((x) => x.q === q) || { s: 6 }).s
     res.json({
-      menus: range(s, 6).map(h => ({
+      menus: range(s, 6).map((h) => ({
         title: `${h}:00`,
         staticSubMenu: `${root}/work-timer/all-times/h/${h}`,
         action: `${root}/work-timer/start`,
         method: 'POST',
-        json: payload(h)
-      }))
+        json: payload(h),
+      })),
     })
   })
 
@@ -239,13 +233,13 @@ function registerRoutes(app) {
     const root = `${req.protocol}://${req.get('host')}`
     const { h } = req.params
     res.json({
-      menus: range(0, 60, 5).map(m => ({
+      menus: range(0, 60, 5).map((m) => ({
         title: `${h}:${('0' + m).slice(-2)}`,
         staticSubMenu: `${root}/work-timer/all-times/h/${h}/m/${m}`,
         action: `${root}/work-timer/start`,
         method: 'POST',
-        json: payload(parseInt(h), m)
-      }))
+        json: payload(parseInt(h), m),
+      })),
     })
   })
 
@@ -253,12 +247,12 @@ function registerRoutes(app) {
     const root = `${req.protocol}://${req.get('host')}`
     const { h, m } = req.params
     res.json({
-      menus: range(parseInt(m) + 1, 4).map(dm => ({
+      menus: range(parseInt(m) + 1, 4).map((dm) => ({
         title: `${h}:${('0' + dm).slice(-2)}`,
         action: `${root}/work-timer/start`,
         method: 'POST',
-        json: payload(parseInt(h), dm)
-      }))
+        json: payload(parseInt(h), dm),
+      })),
     })
   })
 
@@ -266,7 +260,7 @@ function registerRoutes(app) {
     const r = await fetch(
       'https://wt-477473e0fbb495e3cc5e2e34614d8d2e-0.run.webtask.io/currentTimedEvent',
       {
-        method: 'DELETE'
+        method: 'DELETE',
       }
     )
     const deleteWorkTimerData = await r.json()
@@ -291,8 +285,8 @@ function registerRoutes(app) {
         method: 'POST',
         body: formBody,
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        }
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
       }
     )
 
@@ -316,7 +310,7 @@ function draw(canvas, pct) {
 
   const size = canvas.width
 
-  const fillSegment = segment => {
+  const fillSegment = (segment) => {
     segment.save()
     segment.beginPath()
     segment.moveTo(size / 2, size / 2)
@@ -326,7 +320,7 @@ function draw(canvas, pct) {
     segment.restore()
   }
 
-  const fillTrack = track => {
+  const fillTrack = (track) => {
     track.save()
     track.beginPath()
     track.moveTo(size / 2, size / 2)
@@ -336,7 +330,7 @@ function draw(canvas, pct) {
     track.restore()
   }
 
-  const clearCenter = center => {
+  const clearCenter = (center) => {
     center.save()
     center.beginPath()
     center.arc(size / 2, size / 2, size * 0.2, 0, 2 * Math.PI)
@@ -347,7 +341,7 @@ function draw(canvas, pct) {
     center.restore()
   }
 
-  const fillDot = dot => {
+  const fillDot = (dot) => {
     dot.save()
     dot.beginPath()
     dot.moveTo(size / 2, size / 2)

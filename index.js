@@ -5,10 +5,10 @@ const bodyParser = require('body-parser')
 
 const common = require('./shared/common')
 const services = [
-  require('./occurrences/fitbit/fitbit'),
+  // require('./occurrences/fitbit/fitbit'),
   require('./occurrences/workTimer/workTimer'),
   require('./occurrences/tasks/tasks'),
-  require('./occurrences/buildStatus/buildStatus')
+  // require('./occurrences/buildStatus/buildStatus')
 ]
 
 const app = express()
@@ -31,25 +31,27 @@ app.get('/', async (req, res) => {
   const root = `${req.protocol}://${req.get('host')}`
 
   try {
-    const occurrences = (await Promise.all(
-      services.map(s => {
-        if (typeof s.shouldShow === 'function' && !s.shouldShow()) {
-          return {
-            name: s.name,
-            icon: `${root}/public/000000-0.0.png`,
-            colour: false,
-            toolTip: '',
-            usesCache: true
+    const occurrences = (
+      await Promise.all(
+        services.map((s) => {
+          if (typeof s.shouldShow === 'function' && !s.shouldShow()) {
+            return {
+              name: s.name,
+              icon: `${root}/public/000000-0.0.png`,
+              colour: false,
+              toolTip: '',
+              usesCache: true,
+            }
           }
-        }
 
-        try {
-          return s.makeOccurrence(root)
-        } catch (e) {
-          console.error('e:', e)
-        }
-      })
-    )).filter(x => x)
+          try {
+            return s.makeOccurrence(root)
+          } catch (e) {
+            console.error('e:', e)
+          }
+        })
+      )
+    ).filter((x) => x)
 
     const smallScreenController = {
       name: 'smallscreen',
@@ -60,24 +62,24 @@ app.get('/', async (req, res) => {
       menus: [
         {
           title: 'Occurrences:',
-          menus: occurrences.map(o => {
+          menus: occurrences.map((o) => {
             const isHidden = hidden.includes(o.name)
             return {
               title: `${isHidden ? '☐' : '☑'} ${o.name}`,
               action: `${root}/hidden/${o.name}`,
               method: 'POST',
-              json: { hide: Boolean(!isHidden) }
+              json: { hide: Boolean(!isHidden) },
             }
-          })
-        }
-      ]
+          }),
+        },
+      ],
     }
 
     res.json({
       occurrences: [
-        ...occurrences.filter(o => !hidden.includes(o.name)),
-        smallScreenController
-      ]
+        ...occurrences.filter((o) => !hidden.includes(o.name)),
+        smallScreenController,
+      ],
     })
   } catch (e) {
     console.trace(e)
@@ -90,7 +92,7 @@ app.post('/hidden/:name', bodyParser.json(), (req, res) => {
 
   console.log({ name, hide })
 
-  hidden = hidden.filter(e => e !== name)
+  hidden = hidden.filter((e) => e !== name)
 
   if (hide) {
     hidden = [...hidden, name]
@@ -108,7 +110,7 @@ services.map(({ name }) => {
     try {
       const occurrence = s.makeOccurrence(root)
       res.json({
-        occurrence
+        occurrence,
       })
     } catch (e) {
       console.trace(e)
@@ -122,7 +124,7 @@ services.map(({ name }) => {
     try {
       const occurrence = s.makeOccurrence(root, true)
       res.json({
-        occurrence
+        occurrence,
       })
     } catch (e) {
       console.trace(e)
@@ -136,7 +138,7 @@ app.use('/public', express.static('public'))
 const port = parseInt(process.env.PORT || '22013', 10)
 
 Promise.all(
-  services.map(async s => {
+  services.map(async (s) => {
     const init = s.init || (() => Promise.resolve())
     await init()
     s.registerRoutes(app)
@@ -144,12 +146,12 @@ Promise.all(
   })
 )
   .then(() => {
-    app.listen(port, e => {
+    app.listen(port, (e) => {
       if (e) console.error(`Failed to listen on port ${port}:`, port)
       else console.log(`Head to port ${port} to feel the shizzle`)
     })
   })
-  .catch(e => {
+  .catch((e) => {
     console.error('init failed')
     console.error(e)
   })
