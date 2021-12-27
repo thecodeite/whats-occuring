@@ -8,7 +8,7 @@ const upcomingResponsibilities = require('@codeite/upcoming-responsibilities')
 const { addRes } = require('../../shared/helpers')
 const DataCache = require('../../shared/DataCache')
 
-const listsCookie = process.env['LISTS_COOKIE']
+const listsCookie = encodeURIComponent(process.env['LISTS_COOKIE'])
 const tasksApi = 'https://lists.codeite.net/list/~/resps/'
 const taskApi = taskId => `https://lists.codeite.net/list/~/resps/_/${taskId}`
 

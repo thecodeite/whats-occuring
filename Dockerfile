@@ -1,25 +1,4 @@
-FROM node:10-alpine
-
-# RUN apk add --no-cache       \
-#   make gcc g++ python git  \
-#   postgresql-client        \
-#   bash \
-#   libjpeg-turbo-dev cairo-dev pango \
-#   imagemagick \
-#   ghostscript
-RUN apk add --no-cache --virtual .build-deps git build-base g++ 
-RUN apk add --no-cache --virtual .npm-deps cairo-dev libjpeg-turbo-dev pango pango-dev
-RUN apk add --update  --repository http://dl-3.alpinelinux.org/alpine/edge/testing libmount ttf-dejavu ttf-droid ttf-freefont ttf-liberation ttf-ubuntu-font-family fontconfig
-RUN apk add libc6-compat
-RUN ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2
-# RUN apk add --no-cache \
-#   build-base \
-#   g++ \
-#   cairo-dev \
-#   jpeg-dev \
-#   pango-dev \
-#   bash \
-#   imagemagick
+FROM node:10-buster-slim
 
 # setup
 RUN mkdir /app
