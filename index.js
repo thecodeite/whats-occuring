@@ -7,6 +7,7 @@ const common = require('./shared/common')
 const services = [
   // require('./occurrences/fitbit/fitbit'),
   require('./occurrences/workTimer/workTimer'),
+  require('./occurrences/workTimer2/workTimer'),
   require('./occurrences/tasks/tasks'),
   // require('./occurrences/buildStatus/buildStatus')
 ]
